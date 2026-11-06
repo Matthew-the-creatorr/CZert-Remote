@@ -71,8 +71,9 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
           && request.resource.data.status in ['approved','rejected'])
         ||
-        // Same admin can re-pair after a reset/rejection, only with a NEW valid code.
-        (resource.data.from == request.auth.uid && resource.data.status in ['approved','rejected']
+        // Same admin can renew after code rotation, reset or rejection; only with current valid secret.
+        // Another user cannot modify the request or bypass device approval.
+        (resource.data.from == request.auth.uid && resource.data.status in ['pending','approved','rejected']
           && request.resource.data.from == resource.data.from
           && request.resource.data.target == resource.data.target
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','secret','fromName','createdAt'])

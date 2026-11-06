@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080e19"><title>CZert Remote v3.0.2 – zabalené v APK</title><style>
+<html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080e19"><title>CZert Remote v3.0.3 – zabalené v APK</title><style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#080d16;color:#e9f3ff;color-scheme:dark}*{box-sizing:border-box}body{margin:0}.app{max-width:1080px;margin:0 auto;padding:24px 20px 65px}.top{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px}.brand{display:flex;align-items:center;gap:12px}.brand strong{font-size:21px}.brand em{font-size:10px;font-style:normal;color:#10e6cb;border:1px solid #047b78;border-radius:4px;padding:3px 6px;letter-spacing:.1em;margin-left:8px;vertical-align:middle}.brand small{display:block;color:#93a6bc;margin-top:3px;font-family:monospace;font-size:11px}.logo{display:inline-grid;place-items:center;background:linear-gradient(135deg,#11e7c5,#128ac7);color:#08202c;border-radius:12px;font-weight:900;width:48px;height:48px}.iconbtn{background:#142336;border:1px solid #2f4260;padding:9px 15px;font-size:24px}.banner{margin:14px 0 20px;border:1px solid #21364d;border-radius:10px;padding:10px 14px;color:#8fe7cf;font-size:13px}.panel{border:1px solid #223046;background:#0f1728;border-radius:17px;padding:20px;margin:0 0 18px;box-shadow:0 10px 25px #0002}.panel h1{font-size:27px;margin:0 0 10px}.panel h2{font-size:17px;margin:0 0 12px}.panel p,.muted{color:#95a5bf;line-height:1.5}.headrow{display:flex;justify-content:space-between;gap:8px;align-items:center}.kicker{font-size:12px;letter-spacing:.08em;color:#94abc3;font-weight:800}.big{font-weight:800;font-size:37px;color:#06e7c9;margin:15px 0 2px;font-variant-numeric:tabular-nums}.stat .big{min-height:44px}.meter{height:9px;border-radius:99px;background:#27364d;overflow:hidden;margin:15px 0}.meter i{display:block;background:linear-gradient(90deg,#03d9c1,#33addb);height:100%;width:0%;transition:width .3s}.metrics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.data-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.datum{padding:11px;border:1px solid #24364e;border-radius:10px;min-height:60px}.datum b{display:block;color:#8a9ab3;font-size:11px;margin-bottom:8px}.datum span{color:#e5f6fd;font-family:monospace;font-size:12px;overflow-wrap:anywhere}.pill{display:inline-block;font-size:10px;color:#29dfc3;border:1px solid #165a63;border-radius:6px;padding:5px 8px;font-weight:700}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.actions>*{flex:1;min-width:125px}button{background:#02cdb3;color:#071820;border:1px solid transparent;border-radius:9px;padding:12px 14px;font-weight:750;font:inherit;cursor:pointer}button:hover{filter:brightness(1.13)}button.outline,button.tiny{background:#17283e;color:#b5fbef;border-color:#29445f}button.tiny{padding:8px 12px}button.danger{background:#4b172d;border:1px solid #c83470;color:#ffe1ed}button:disabled{opacity:.5;cursor:not-allowed}input:not([type=checkbox]){width:100%;border-radius:9px;padding:13px;border:1px solid #31435c;background:#0a1220;color:white;margin:8px 0;font:inherit}label:not(.checkrow){display:block;color:#a5b9cb;font-size:13px}label.checkrow{display:flex;gap:10px;align-items:center;padding:12px 3px;border-bottom:1px solid #1f3048}.checkrow input{accent-color:#04d4b4;width:18px;height:18px}.status{background:#13243a;border-radius:10px;padding:14px;white-space:pre-wrap}.hint{font-size:12px}.code{padding:12px 14px;background:#080f1f;border:1px solid #29455b;border-radius:9px;color:#60efdf;overflow-wrap:anywhere;font-family:monospace;font-size:15px;user-select:all}.success{color:#18edbb!important}.hidden{display:none!important}video{display:block;max-width:100%;max-height:420px;width:100%;background:#060a11;border-radius:12px;margin:12px 0}audio{width:100%}footer{color:#58718a;text-align:center;font-size:12px;margin-top:30px}@media(max-width:600px){.app{padding:16px 12px 54px}.panel{padding:16px}.data-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics-grid{gap:9px}.brand em{display:block;width:fit-content;margin:3px 0}.big{font-size:29px}.panel h2{font-size:15px}}
 
 </style></head><body>
 <main class="app">
-  <header class="top"><div class="brand"><span class="logo">CZ</span><div><strong>CZert <em>REMOTE LAB v3.0.2</em></strong><small id="subtitle">Zabezpečené párovanie zariadení</small></div></div><button class="iconbtn" id="settingsBtn" aria-label="Nastavenia">⚙</button></header>
+  <header class="top"><div class="brand"><span class="logo">CZ</span><div><strong>CZert <em>REMOTE LAB v3.0.3</em></strong><small id="subtitle">Zabezpečené párovanie zariadení</small></div></div><button class="iconbtn" id="settingsBtn" aria-label="Nastavenia">⚙</button></header>
   <div id="banner" class="banner">Inicializujem zabezpečené spojenie…</div>
   <section id="setup" class="panel"><h1>Vyber režim</h1><p>Druhé zariadenie musí potvrdiť párovanie. Každé zdieľanie vyžaduje ďalšie výslovné schválenie.</p><label>Meno zariadenia<input id="name" maxlength="35" autocomplete="off" placeholder="Napr. Môj telefón"></label><div class="actions"><button id="chooseUser">📱 Používateľ</button><button id="chooseAdmin" class="outline">🖥 Administrátor</button></div></section>
   <section id="settings" class="panel hidden"><div class="headrow"><h2>⚙ Nastavenia</h2><button id="closeSettings" class="tiny">Zavrieť</button></div><p id="profileInfo"></p><div id="userSettings" class="hidden"><div class="pill">Aktuálny párovací kód</div><div id="settingsCode" class="code">—</div><p>Prepínače určujú, aké žiadosti chceš prijímať. Aj pri zapnutí budeš každú reláciu potvrdzovať osobitne.</p><label class="checkrow"><input type="checkbox" id="allowCamera" checked> Povoliť žiadosti o kameru</label><label class="checkrow"><input type="checkbox" id="allowMic" checked> Povoliť žiadosti o mikrofón</label><label class="checkrow"><input type="checkbox" id="allowScreen" checked> Povoliť žiadosti o obrazovku</label><button id="resetPair" class="danger">Odpojiť a vygenerovať nový kód</button></div><button id="clearProfile" class="outline">Zmeniť režim na tomto zariadení</button></section>
@@ -23,7 +23,7 @@
   <footer>🔐 Prenosy iba so súhlasom • Žiadne skryté nahrávanie • CZert Remote</footer>
 </main>
 <script type="module">
-/* CZert Remote v3.0.2 — Firebase pairing and media diagnostics separated. */
+/* CZert Remote v3.0.3 — Firebase pairing and media diagnostics separated. */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, doc, collection, query, where, setDoc, getDoc, updateDoc, addDoc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
@@ -43,7 +43,7 @@ const store=localStorage, native=window.CZertNative||null, rtcConfig={iceServers
 let auth,db,uid='',role=store.getItem('cz_role')||'', pairSecret='',pendingPair=null,deviceData=null,targetId=store.getItem('cz_admin_target')||'',activeSession=null,activePc=null,activeStream=null,viewerSession=null,viewerPc=null;
 let unsubs=[],viewerUnsubs=[],activeUnsubs=[],pairWatch=()=>{},sessionWatch=()=>{},receivedCandidates=new Set(),nativeCandidateBuffer=[];
 const settingsPerm=(kind)=>store.getItem('cz_allow_'+kind)!=='false';
-const errText=e=>{let s=String(e?.code||e?.message||e||'Neznáma chyba');if(/permission-denied|insufficient permissions/i.test(s))return 'Firestore odmietol túto operáciu. Pre v3.0 treba publikovať nové firestore.rules.';if(/api-key-not-valid|invalid-api-key/.test(s))return 'Firebase odmieta API kľúč. Vo Google Cloud skontroluj pri tomto kľúči Website restrictions: musia obsahovať obe adresy https://prismatic-ganache-e69adc.netlify.app aj https://prismatic-ganache-e69adc.netlify.app/* . Over aj Identity Toolkit API.';if(/operation-not-allowed/.test(s))return 'Vo Firebase Authentication musí byť zapnuté anonymné prihlásenie.';if(/unavailable/.test(s))return 'Firebase je nedostupný. Skontroluj pripojenie.';return s};
+const errText=e=>{let s=String(e?.code||e?.message||e||'Neznáma chyba');if(/permission-denied|insufficient permissions/i.test(s))return 'Firestore zamietol prístup. Skontroluj platnosť kódu, predchádzajúcu žiadosť a publikované pravidlá Firebase.';if(/api-key-not-valid|invalid-api-key/.test(s))return 'Firebase odmieta API kľúč. Vo Google Cloud skontroluj pri tomto kľúči Website restrictions: musia obsahovať obe adresy https://prismatic-ganache-e69adc.netlify.app aj https://prismatic-ganache-e69adc.netlify.app/* . Over aj Identity Toolkit API.';if(/operation-not-allowed/.test(s))return 'Vo Firebase Authentication musí byť zapnuté anonymné prihlásenie.';if(/unavailable/.test(s))return 'Firebase je nedostupný. Skontroluj pripojenie.';return s};
 const warn=e=>{console.error('[CZert]',e);say('banner','Chyba: '+errText(e));};
 // A rejected optional media listener must NEVER make a successful pairing look disconnected.
 function pairingError(e){
@@ -55,7 +55,7 @@ function pairingError(e){
 function mediaError(e){
   console.warn('[CZert / streams]',e);
   say('mediaBackendStatus', /permission-denied|insufficient permissions/i.test(String(e?.code||e?.message||e))
-    ? '⚠️ Párovanie funguje. Živé prenosy zatiaľ blokujú pravidlá Firestore: v konzole Firebase publikuj web/firestore.rules z v3.0.2.'
+    ? '⚠️ Párovanie funguje. Živé prenosy zatiaľ blokujú pravidlá Firestore: v konzole Firebase publikuj web/firestore.rules z v3.0.3.'
     : '⚠️ Živý prenos zatiaľ nie je dostupný: '+errText(e));
 }
 
@@ -110,7 +110,63 @@ async function startAdmin(){
   if(targetId)say('adminStatus','Predošlý cieľ je uložený, ale jeho aktuálne spárovanie nemožno bez potvrdenia overiť. Zadaj nový kód.');
 }
 function markAdminPaired(id){targetId=id;store.setItem('cz_admin_target',id);say('adminLabel','Zariadenie: '+id.slice(0,12));show('adminPaired')}
-async function connect(){try{whenReady(()=>{});const {id,secret}=parseCode($('targetCode').value);if(id===uid)throw Error('Nemôžeš pripojiť zariadenie samo k sebe.');targetId=id;say('adminStatus','Odosielam žiadosť…');const ref=doc(db,'requests',uid+'_'+id);const data={from:uid,target:id,secret,fromName:store.getItem('cz_name')||'Administrátor',status:'pending',createdAt:serverTimestamp()};await setDoc(ref,data);pairWatch();pairWatch=onSnapshot(ref,s=>{if(!s.exists())return;const status=s.data().status;if(status==='approved'){say('adminStatus','✅ Spárované!');markAdminPaired(id)}else if(status==='rejected'){say('adminStatus','Žiadosť bola odmietnutá.')}else say('adminStatus','Čaká sa na potvrdenie na používateľskom telefóne…')},warn)}catch(e){warn(e);say('adminStatus',errText(e))}}
+function watchPairResponse(ref,id,expectedSecret){
+  pairWatch();
+  pairWatch=onSnapshot(ref,s=>{
+    if(!s.exists())return;
+    const data=s.data();
+    if(data.from!==uid||data.target!==id){say('adminStatus','Nesúlad údajov žiadosti.');return;}
+    if(data.status==='approved'){
+      // Only a fresh approval observed for the submitted code unlocks this UI.
+      if(data.secret===expectedSecret){
+        say('adminStatus','✅ Spárované – schválené na druhom zariadení!');markAdminPaired(id);
+      }else say('adminStatus','Predošlé schválenie patrí inému kódu. Resetuj párovanie a použi nový kód.');
+    }else if(data.status==='rejected'){say('adminStatus','Žiadosť bola odmietnutá.');show('adminPaired',false)}
+    else say('adminStatus','Čaká sa na potvrdenie na používateľskom telefóne…');
+  },e=>{console.error('[CZert / request listener]',e);say('adminStatus','Nedá sa sledovať stav žiadosti: '+errText(e))});
+}
+async function connect(){
+  let id='',secret='',ref;
+  try{
+    whenReady(()=>{});
+    ({id,secret}=parseCode($('targetCode').value));
+    if(id===uid)throw Error('Nemôžeš pripojiť zariadenie samo k sebe.');
+    show('adminPaired',false);
+    targetId=id;
+    say('adminStatus','Odosielam žiadosť…');
+    ref=doc(db,'requests',uid+'_'+id);
+    const data={from:uid,target:id,secret,fromName:store.getItem('cz_name')||'Administrátor',status:'pending',createdAt:serverTimestamp()};
+    try{
+      await setDoc(ref,data);
+    }catch(writeError){
+      // A second click on an already-pending request was wrongly treated as a
+      // new write. Firestore deliberately denies overwriting an active request.
+      if(/permission-denied|insufficient permissions/i.test(String(writeError?.code||writeError))){
+        let prior=null;
+        try{const snapshot=await getDoc(ref);if(snapshot.exists())prior=snapshot.data();}catch(readError){
+          console.warn('[CZert / existing request lookup]',readError);
+        }
+        if(prior?.from===uid&&prior?.target===id){
+          if(prior.status==='pending'&&prior.secret===secret){
+            say('adminStatus','Táto žiadosť už čaká. Obnovujem sledovanie jej potvrdenia…');
+            watchPairResponse(ref,id,secret);
+            return;
+          }
+          if(prior.status==='pending')throw Error('Existuje staršia čakajúca žiadosť s iným kódom. Na používateľskom zariadení ju treba zamietnuť alebo vo Firebase publikovať aktualizované pravidlá, ktoré dovolia nový platný kód.');
+          if(prior.status==='approved'||prior.status==='rejected')throw Error('Predchádzajúca žiadosť už bola '+(prior.status==='approved'?'schválená':'odmietnutá')+'. Na opätovné párovanie použi nový kód po resete a aktuálne pravidlá Firestore.');
+        }
+        throw Error('Firebase odmietol vytvorenie žiadosti. Over, že na používateľskom telefóne je zobrazený NOVÝ kód a zariadenie nie je spárované; ak to nepomôže, server ešte nemá aktuálne pravidlá Firestore.');
+      }
+      throw writeError;
+    }
+    watchPairResponse(ref,id,secret);
+  }catch(e){
+    console.error('[CZert / connect request]',e);
+    const message=errText(e);
+    say('adminStatus',message);
+    say('banner','Žiadosť nebola odoslaná: '+message);
+  }
+}
 function stopTracks(){if(activeStream){activeStream.getTracks().forEach(t=>t.stop());activeStream=null;}if(activePc){activePc.close();activePc=null;}}
 let pendingSession=null;
 async function rejectShare(){if(!pendingSession)return;const r=pendingSession;pendingSession=null;show('shareRequest',false);try{await updateDoc(r.ref,{status:'declined'})}catch(e){warn(e)}}
@@ -144,7 +200,7 @@ $('clearProfile').onclick=()=>{if(!confirm('Zmeniť režim? Neprebieha automatic
 $('resetPair').onclick=resetPair;$('resetPairQuick').onclick=resetPair;$('refresh').onclick=renderSpecs;$('newCode').onclick=newCode;$('approve').onclick=()=>decidePair(true);$('reject').onclick=()=>decidePair(false);$('connect').onclick=connect;$('shareApprove').onclick=acceptShare;$('shareReject').onclick=rejectShare;$('stopShare').onclick=()=>stopUserShare();$('stopView').onclick=()=>stopViewer();$('resetAdmin').onclick=resetAdmin;
 document.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>startView(b.dataset.kind));
 window.addEventListener('pagehide',()=>{stopTracks();viewerPc?.close();native?.stopScreen()});
-window.CZERT_WEB_VERSION='3.0.2';roleUI();boot();setInterval(()=>{if(role==='user'&&document.visibilityState==='visible')renderSpecs().catch(console.error)},2500);
+window.CZERT_WEB_VERSION='3.0.3';roleUI();boot();setInterval(()=>{if(role==='user'&&document.visibilityState==='visible')renderSpecs().catch(console.error)},2500);
 
 </script>
 </body></html>

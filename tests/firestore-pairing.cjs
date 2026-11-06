@@ -28,6 +28,12 @@ const {doc,collection,setDoc,updateDoc,getDoc,getDocs,query,where,serverTimestam
     await assertSucceeds(updateDoc(doc(o,'devices',owner),{pairedWith:null,pairedName:null,secret:newCode}));pass('Reset revokes pairing and rotates code');
     await assertFails(setDoc(doc(v,'streams','blocked_session_0123456'),{owner,viewer,kind:'screen',status:'requested',offer:'v=0\r\n',answer:null,createdAt:serverTimestamp()}));pass('Reset prevents old admin opening new media session');
     await assertSucceeds(setDoc(doc(v,'requests',viewer+'_'+owner),{from:viewer,target:owner,secret:newCode,fromName:'Admin Test',status:'pending',createdAt:serverTimestamp()}));pass('Admin can send a NEW pairing request after reset');
+    // A previously pending request can be refreshed with a different valid code,
+    // but not with a made-up code. This regression caused permission-denied on both phones.
+    const thirdCode='c'.repeat(24);
+    await assertSucceeds(updateDoc(doc(o,'devices',owner),{secret:thirdCode}));pass('Owner rotates code while unpaired');
+    await assertFails(setDoc(doc(v,'requests',viewer+'_'+owner),{from:viewer,target:owner,secret:'d'.repeat(24),fromName:'Admin Test',status:'pending',createdAt:serverTimestamp()}));pass('Wrong code cannot replace pending request');
+    await assertSucceeds(setDoc(doc(v,'requests',viewer+'_'+owner),{from:viewer,target:owner,secret:thirdCode,fromName:'Admin Test',status:'pending',createdAt:serverTimestamp()}));pass('Same admin can renew pending request with current code');
     console.log('RESULT '+n+'/'+n+' Firestore emulator rule tests PASS');
   } finally {await env.cleanup()}
 })().catch(err=>{console.error(err);process.exit(1)});

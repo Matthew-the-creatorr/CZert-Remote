@@ -3,52 +3,26 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
       - name: Install Android SDK 35
-        shell: bash
-        run: |
-          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
-          if [ -z "$SDKMANAGER" ]; then
-            echo "sdkmanager is missing on the GitHub Actions runner"
-            exit 1
-          fi
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --install 'platforms;android-35' 'build-tools;35.0.0'
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
-      - name: Rename APK for download
-        run: cp app/build/outputs/apk/debug/app-debug.apk CZert-Remote-v3.0.2.apk
       - uses: actions/upload-artifact@v4
-        if: success()
         with:
-          name: CZert-Remote-v3.0.2-debug-apk
-          path: CZert-Remote-v3.0.2.apk
-      - name: Publish preview APK to GitHub Releases
-        if: success()
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v3.0.2-preview
-          name: CZert Remote v3.0.2 — testovacia APK
-          prerelease: true
-          make_latest: false
-          body: |
-            Táto APK obsahuje v3.0.2 používateľské rozhranie priamo vo vnútri.
-            Základné párovanie bolo úspešne simulované medzi dvoma klientmi.
-            Živý Firebase server a zdieľanie obrazovky medzi skutočnými telefónmi ešte nie sú overené.
-            Každé zdieľanie vyžaduje schválenie na druhom zariadení.
-          files: CZert-Remote-v3.0.2.apk
-          fail_on_unmatched_files: true
+          name: CZert-Remote-v3.0-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
