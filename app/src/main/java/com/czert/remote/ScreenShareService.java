@@ -95,7 +95,7 @@ public final class ScreenShareService extends Service {
         pc=factory.createPeerConnection(cfg,new PeerConnection.Observer(){
             @Override public void onSignalingChange(PeerConnection.SignalingState st){}
             @Override public void onIceConnectionChange(PeerConnection.IceConnectionState st){
-                if(st==PeerConnection.IceConnectionState.FAILED)MainActivity.failure(sid,"Nepodarilo sa vytvoriť WebRTC spojenie (skontroluj TURN server). ");
+                if(st==PeerConnection.IceConnectionState.FAILED)MainActivity.failure(sid,"WebRTC ICE spojenie zlyhalo. Môže chýbať sieťová cesta medzi telefónmi; pri rôznych sieťach môže byť potrebný TURN server.");
             }
             @Override public void onIceConnectionReceivingChange(boolean receiving){}
             @Override public void onIceGatheringChange(PeerConnection.IceGatheringState st){}

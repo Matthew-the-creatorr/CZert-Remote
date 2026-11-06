@@ -28,27 +28,42 @@ jobs:
           fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" --install 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Verify WebRTC JavaScript and ICE regression
+        shell: bash
+        run: |
+          cp web/app.js /tmp/czert-web.mjs
+          node --check /tmp/czert-web.mjs
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          m = re.search(r'<script type="module">(.*?)</script>', html, re.S)
+          assert m, 'Bundled JavaScript module not found'
+          Path('/tmp/czert-embedded.mjs').write_text(m.group(1),encoding='utf-8')
+          PY
+          node --check /tmp/czert-embedded.mjs
+          node tests/ice-queue.cjs
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
       - name: Rename APK for download
-        run: cp app/build/outputs/apk/debug/app-debug.apk CZert-Remote-v3.0.3.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk CZert-Remote-v3.0.4.apk
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: CZert-Remote-v3.0.3-debug-apk
-          path: CZert-Remote-v3.0.3.apk
+          name: CZert-Remote-v3.0.4-debug-apk
+          path: CZert-Remote-v3.0.4.apk
       - name: Publish preview APK to GitHub Releases
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.0.3-preview
-          name: CZert Remote v3.0.3 — testovacia APK
+          tag_name: v3.0.4-preview
+          name: CZert Remote v3.0.4 — testovacia APK
           prerelease: true
           make_latest: false
           body: |
-            Táto APK obsahuje v3.0.3 používateľské rozhranie priamo vo vnútri.\n            Firestore pravidlá je potrebné samostatne publikovať na serveri.
-            Oprava opakovaného odosielania párovacej žiadosti a podrobnejších chýb.
+            Táto APK obsahuje v3.0.4 používateľské rozhranie priamo vo vnútri.\n            Firestore pravidlá je potrebné samostatne publikovať na serveri.
+            Oprava predčasného doručenia ICE kandidátov pred remote SDP a diagnostika spojenia. Párovanie zostáva nezmenené.
             Živý Firebase server a zdieľanie obrazovky medzi skutočnými telefónmi ešte nie sú overené.
             Každé zdieľanie vyžaduje schválenie na druhom zariadení.
-          files: CZert-Remote-v3.0.3.apk
+          files: CZert-Remote-v3.0.4.apk
           fail_on_unmatched_files: true
