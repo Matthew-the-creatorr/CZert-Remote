@@ -1,0 +1,56 @@
+name: Build CZert Black Exit Demo
+on:
+  push:
+    branches: [black-screen-demo]
+    paths:
+      - 'black-screen-demo/**'
+      - '.github/workflows/build-black-screen-demo.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Install Android SDK 35
+        shell: bash
+        run: |
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          test -n "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Verify no intrusive permissions and functioning exit
+        run: python3 black-screen-demo/tests/check_project.py
+      - name: Build APK
+        run: gradle -p black-screen-demo --no-daemon :app:assembleDebug
+      - name: Rename APK
+        run: cp black-screen-demo/app/build/outputs/apk/debug/app-debug.apk CZert-Cierna-Obrazovka-v1.0.apk
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CZert-Cierna-Obrazovka-v1.0
+          path: CZert-Cierna-Obrazovka-v1.0.apk
+      - name: Publish direct APK download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: black-screen-exit-v1.0-preview
+          name: CZert Čierna obrazovka v1.0 – samostatné demo
+          target_commitish: black-screen-demo
+          prerelease: true
+          make_latest: false
+          body: |
+            Jednoduché Android demo: čierna obrazovka, veľký biely krížik uprostred.
+            Kliknutie na krížik aplikáciu zavrie a otvorí domovskú obrazovku.
+            Samo sa po inštalácii nespúšťa, nič nezamyká a nevyžaduje oprávnenia.
+            Systémové gestá a tlačidlo Späť zostávajú funkčné.
+          files: CZert-Cierna-Obrazovka-v1.0.apk
+          fail_on_unmatched_files: true
