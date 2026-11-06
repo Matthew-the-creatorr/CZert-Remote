@@ -3,11 +3,12 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -23,6 +24,24 @@ jobs:
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
-          name: CZert-Remote-v3.0-debug-apk
+          name: CZert-Remote-v3.0.3-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish test APK to GitHub Releases
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v3.0.3-preview
+          name: CZert Remote v3.0.3 — testovacia APK
+          prerelease: true
+          make_latest: false
+          body: |
+            Oprava opakovaných žiadostí párovania. Testovacia debug APK.
+            Firebase web kľúč je verejná klientská konfigurácia.
+            Pred používaním živých prenosov je nutné vo Firebase Console
+            publikovať serverové firestore.rules pre v3.0.3.
+            Živý prenos a spojenie na produkčných dvoch zariadeniach
+            zatiaľ neboli nezávisle potvrdené.
+          files: app/build/outputs/apk/debug/app-debug.apk
+          fail_on_unmatched_files: true
