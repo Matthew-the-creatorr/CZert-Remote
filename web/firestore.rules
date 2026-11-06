@@ -1,0 +1,130 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signed() { return request.auth != null; }
+    function devicePath(id) { return /databases/$(database)/documents/devices/$(id); }
+    function requestPath(admin, owner) { return /databases/$(database)/documents/requests/$(admin + '_' + owner); }
+    function sessionPath(id) { return /databases/$(database)/documents/streams/$(id); }
+    function validPair(owner, viewer) {
+      return exists(devicePath(owner))
+        && get(devicePath(owner)).data.pairedWith == viewer
+        && exists(requestPath(viewer, owner))
+        && get(requestPath(viewer, owner)).data.status == 'approved';
+    }
+    function isSessionParty(id) {
+      return signed() && exists(sessionPath(id)) && (
+        get(sessionPath(id)).data.owner == request.auth.uid
+        || (get(sessionPath(id)).data.viewer == request.auth.uid
+          && validPair(get(sessionPath(id)).data.owner, request.auth.uid))
+      );
+    }
+    match /devices/{deviceId} {
+      allow get: if signed() && request.auth.uid == deviceId;
+      allow list, delete: if false;
+      allow create: if signed() && request.auth.uid == deviceId
+        && request.resource.data.keys().hasOnly(['owner','secret','pairedWith','pairedName','createdAt'])
+        && request.resource.data.owner == deviceId
+        && request.resource.data.pairedWith == null
+        && request.resource.data.pairedName == null
+        && request.resource.data.secret is string && request.resource.data.secret.size() == 24;
+      allow update: if signed() && request.auth.uid == deviceId
+        && resource.data.owner == deviceId && request.resource.data.owner == deviceId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['secret','pairedWith','pairedName'])
+        && (
+          // Rotate code while not paired.
+          (resource.data.pairedWith == null && request.resource.data.pairedWith == null
+            && request.resource.data.secret is string && request.resource.data.secret.size() == 24)
+          ||
+          // Owner explicitly approves a pending request before setting pairedWith.
+          (resource.data.pairedWith == null
+            && request.resource.data.pairedWith is string
+            && request.resource.data.secret == null
+            && exists(requestPath(request.resource.data.pairedWith, deviceId))
+            && get(requestPath(request.resource.data.pairedWith, deviceId)).data.status == 'approved'
+            && get(requestPath(request.resource.data.pairedWith, deviceId)).data.secret == resource.data.secret)
+          ||
+          // Explicit reset: unlink and rotate the one-time code.
+          (resource.data.pairedWith is string && request.resource.data.pairedWith == null
+            && request.resource.data.pairedName == null
+            && request.resource.data.secret is string && request.resource.data.secret.size() == 24)
+        );
+    }
+    match /requests/{requestId} {
+      function requestedDataOk() {
+        return signed()
+          && request.resource.data.keys().hasOnly(['from','target','secret','fromName','status','createdAt'])
+          && request.resource.data.from == request.auth.uid
+          && requestId == request.auth.uid + '_' + request.resource.data.target
+          && request.resource.data.status == 'pending'
+          && request.resource.data.secret is string && request.resource.data.secret.size() == 24
+          && request.resource.data.fromName is string && request.resource.data.fromName.size() <= 35
+          && exists(devicePath(request.resource.data.target))
+          && get(devicePath(request.resource.data.target)).data.pairedWith == null
+          && get(devicePath(request.resource.data.target)).data.secret == request.resource.data.secret;
+      }
+      allow create: if requestedDataOk();
+      allow get: if signed() && (resource.data.from == request.auth.uid || resource.data.target == request.auth.uid);
+      allow list: if signed() && resource.data.target == request.auth.uid;
+      allow update: if signed() && (
+        // User approves or declines, without changing other request fields.
+        (resource.data.target == request.auth.uid && resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['approved','rejected'])
+        ||
+        // Same admin can re-pair after a reset/rejection, only with a NEW valid code.
+        (resource.data.from == request.auth.uid && resource.data.status in ['approved','rejected']
+          && request.resource.data.from == resource.data.from
+          && request.resource.data.target == resource.data.target
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','secret','fromName','createdAt'])
+          && requestedDataOk())
+      );
+      allow delete: if false;
+    }
+    match /streams/{sessionId} {
+      allow create: if signed()
+        && request.resource.data.keys().hasOnly(['owner','viewer','kind','status','offer','answer','createdAt'])
+        && request.resource.data.viewer == request.auth.uid
+        && request.resource.data.owner is string
+        && request.resource.data.kind in ['camera','mic','screen']
+        && request.resource.data.status == 'requested'
+        && request.resource.data.offer is string && request.resource.data.offer.size() < 50000
+        && request.resource.data.answer == null
+        && validPair(request.resource.data.owner,request.auth.uid);
+      allow get: if signed() && (resource.data.owner == request.auth.uid
+        || (resource.data.viewer == request.auth.uid && validPair(resource.data.owner,request.auth.uid)));
+      // Query the owner's sessions using where('owner','==',auth.uid).
+      allow list: if signed() && resource.data.owner == request.auth.uid;
+      allow update: if signed() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','answer'])
+        && (
+          (resource.data.owner == request.auth.uid && (
+            (resource.data.status == 'requested' && request.resource.data.status == 'declined'
+              && request.resource.data.answer == resource.data.answer)
+            || (resource.data.status == 'requested' && request.resource.data.status == 'streaming'
+              && request.resource.data.answer is string && request.resource.data.answer.size() < 50000)
+            || (resource.data.status in ['requested','streaming'] && request.resource.data.status == 'stopped'
+              && request.resource.data.answer == resource.data.answer)
+          ))
+          ||
+          (resource.data.viewer == request.auth.uid && validPair(resource.data.owner,request.auth.uid)
+            && resource.data.status in ['requested','streaming']
+            && request.resource.data.status == 'stopped'
+            && request.resource.data.answer == resource.data.answer)
+        );
+      allow delete: if false;
+      match /{candidateCollection}/{candidateId} {
+        function validCandidate() {
+          return request.resource.data.keys().hasOnly(['candidate','sdpMid','sdpMLineIndex','usernameFragment'])
+            && request.resource.data.candidate is string
+            && request.resource.data.candidate.size() < 5000;
+        }
+        allow get, list: if candidateCollection in ['viewerCandidates','ownerCandidates'] && isSessionParty(sessionId);
+        allow create: if isSessionParty(sessionId) && validCandidate()
+          && get(sessionPath(sessionId)).data.status in ['requested','streaming'] && (
+          (candidateCollection == 'viewerCandidates' && get(sessionPath(sessionId)).data.viewer == request.auth.uid)
+          || (candidateCollection == 'ownerCandidates' && get(sessionPath(sessionId)).data.owner == request.auth.uid)
+        );
+        allow update, delete: if false;
+      }
+    }
+  }
+}

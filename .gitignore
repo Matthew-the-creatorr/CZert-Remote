@@ -1,0 +1,9 @@
+# Android / Gradle build files
+.gradle/
+**/build/
+.idea/
+*.iml
+local.properties
+*.jks
+*.keystore
+*.apk

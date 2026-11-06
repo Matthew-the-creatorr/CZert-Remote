@@ -1,0 +1,31 @@
+CZert Remote v3.0 – výsledok kontroly (5. 11. 2026)
+
+14 simulovaných kontrol prehliadača s testovacím Firebase a imitovanými WebRTC vrstvami:
+PASS Firebase prihlasovanie (mock)
+PASS vytvorenie Používateľa
+PASS nastavenia, zobrazenie kódu a lokálne prepínače žiadostí
+PASS zmena jednorazového kódu
+PASS schválenie žiadosti o párovanie
+PASS odpojenie a reset kódu
+PASS oznámenie a odmietnutie žiadosti o obrazovku
+PASS schválenie zdieľania kamery – WebRTC signalizácia (mock)
+PASS zastavenie zdieľania kamery v simulácii
+PASS bez neošetrenej chyby JavaScriptu v testovaných scenároch
+PASS rozhranie administrátora
+PASS potvrdenie párovania administrátora v simulácii
+PASS administrátor vytvorí žiadosť o obrazovku v simulácii
+PASS zastavenie požadovanej relácie administrátorom v simulácii
+
+STATIC PASS: node --check web/app.js
+STATIC PASS: AndroidManifest.xml načítateľný XML parserom
+STATIC PASS: súbory Firebase Config, Firestore Rules a webových zdrojov prítomné
+STATIC PASS: zámerné obmedzenia v pravidlách; bez globálneho allow true
+
+NEOTESTOVANÉ:
+- Gradle/Android kompilácia: v tomto prostredí nie je Android SDK ani prístup na externé repozitáre.
+- Načítanie reálnych SDK Firebase/WebRTC cez internet a skutočná služba MediaProjection.
+- Živý prenos na dvoch zariadeniach a pravidlá Firestore na produkčnej databáze.
+- ICE spojenie mimo jednej siete; bez TURN servera môže zlyhať.
+
+UPOZORNENIE: súbor android/app/build/outputs/apk/debug/app-debug.apk tu zatiaľ neexistuje.
+Aplikácia je zdrojový projekt, nie hotová APK.
