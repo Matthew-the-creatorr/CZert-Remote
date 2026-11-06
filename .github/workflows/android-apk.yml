@@ -15,20 +15,29 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
       - name: Install Android SDK 35
-        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+        shell: bash
+        run: |
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager is missing on the GitHub Actions runner"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install 'platforms;android-35' 'build-tools;35.0.0'
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
+      - name: Rename APK for download
+        run: cp app/build/outputs/apk/debug/app-debug.apk CZert-Remote-v3.0.3.apk
       - uses: actions/upload-artifact@v4
         if: success()
         with:
           name: CZert-Remote-v3.0.3-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-      - name: Publish test APK to GitHub Releases
+          path: CZert-Remote-v3.0.3.apk
+      - name: Publish preview APK to GitHub Releases
         if: success()
         uses: softprops/action-gh-release@v2
         with:
@@ -37,11 +46,9 @@ jobs:
           prerelease: true
           make_latest: false
           body: |
-            Oprava opakovaných žiadostí párovania. Testovacia debug APK.
-            Firebase web kľúč je verejná klientská konfigurácia.
-            Pred používaním živých prenosov je nutné vo Firebase Console
-            publikovať serverové firestore.rules pre v3.0.3.
-            Živý prenos a spojenie na produkčných dvoch zariadeniach
-            zatiaľ neboli nezávisle potvrdené.
-          files: app/build/outputs/apk/debug/app-debug.apk
+            Táto APK obsahuje v3.0.3 používateľské rozhranie priamo vo vnútri.\n            Firestore pravidlá je potrebné samostatne publikovať na serveri.
+            Oprava opakovaného odosielania párovacej žiadosti a podrobnejších chýb.
+            Živý Firebase server a zdieľanie obrazovky medzi skutočnými telefónmi ešte nie sú overené.
+            Každé zdieľanie vyžaduje schválenie na druhom zariadení.
+          files: CZert-Remote-v3.0.3.apk
           fail_on_unmatched_files: true
