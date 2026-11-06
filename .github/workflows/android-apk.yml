@@ -30,23 +30,25 @@ jobs:
           "$SDKMANAGER" --install 'platforms;android-35' 'build-tools;35.0.0'
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
+      - name: Rename APK for download
+        run: cp app/build/outputs/apk/debug/app-debug.apk CZert-Remote-v3.0.2.apk
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: CZert-Remote-v3.0-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-      - name: Publish test APK to GitHub Releases
+          name: CZert-Remote-v3.0.2-debug-apk
+          path: CZert-Remote-v3.0.2.apk
+      - name: Publish preview APK to GitHub Releases
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.0-preview
-          name: CZert Remote v3.0 — testovacia APK
+          tag_name: v3.0.2-preview
+          name: CZert Remote v3.0.2 — testovacia APK
           prerelease: true
           make_latest: false
           body: |
-            Testovacia (debug) Android APK. Kompilácia prebehla v GitHub Actions.
-            Živý prenos a funkcie na dvoch telefónoch zatiaľ nie sú overené.
-            Zdieľanie obrazovky, mikrofónu a kamery vyžaduje výslovné povolenie
-            na používateľskom zariadení a viditeľnú aktívnu reláciu.
-          files: app/build/outputs/apk/debug/app-debug.apk
+            Táto APK obsahuje v3.0.2 používateľské rozhranie priamo vo vnútri.
+            Základné párovanie bolo úspešne simulované medzi dvoma klientmi.
+            Živý Firebase server a zdieľanie obrazovky medzi skutočnými telefónmi ešte nie sú overené.
+            Každé zdieľanie vyžaduje schválenie na druhom zariadení.
+          files: CZert-Remote-v3.0.2.apk
           fail_on_unmatched_files: true

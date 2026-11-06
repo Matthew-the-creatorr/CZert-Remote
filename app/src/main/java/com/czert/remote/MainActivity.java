@@ -66,7 +66,19 @@ public class MainActivity extends Activity implements SensorEventListener {
             }
         });
         web.addJavascriptInterface(new NativeBridge(), "CZertNative");
-        web.loadUrl(SITE);
+        try (java.io.InputStream bundled = getAssets().open("index.html")) {
+            // Versioned UI is shipped inside this APK.  HTTPS base URL matches
+            // the application's existing Firebase authorised web origin.
+            // All Firebase traffic still uses real HTTPS connections.
+            String html = new String(bundled.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            web.loadDataWithBaseURL(SITE, html, "text/html", "UTF-8", SITE);
+        } catch (Exception e) {
+            web.loadDataWithBaseURL(SITE,
+                "<html><body style='background:#080e19;color:#fff;padding:20px'>"+
+                "Chyba balíka APK: používateľské rozhranie sa nenačítalo. "+
+                "Preinštaluj aktuálnu verziu CZert Remote.</body></html>",
+                "text/html", "UTF-8", SITE);
+        }
         if(Build.VERSION.SDK_INT>=33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},1403);
     }

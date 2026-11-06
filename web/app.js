@@ -1,4 +1,4 @@
-/* CZert Remote v3.0 — explicit consent for every media session; no background activation. */
+/* CZert Remote v3.0.2 — Firebase pairing and media diagnostics separated. */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, doc, collection, query, where, setDoc, getDoc, updateDoc, addDoc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
@@ -8,26 +8,72 @@ const store=localStorage, native=window.CZertNative||null, rtcConfig={iceServers
 let auth,db,uid='',role=store.getItem('cz_role')||'', pairSecret='',pendingPair=null,deviceData=null,targetId=store.getItem('cz_admin_target')||'',activeSession=null,activePc=null,activeStream=null,viewerSession=null,viewerPc=null;
 let unsubs=[],viewerUnsubs=[],activeUnsubs=[],pairWatch=()=>{},sessionWatch=()=>{},receivedCandidates=new Set(),nativeCandidateBuffer=[];
 const settingsPerm=(kind)=>store.getItem('cz_allow_'+kind)!=='false';
-const errText=e=>{let s=String(e?.code||e?.message||e||'Neznáma chyba');if(/permission-denied|insufficient permissions/i.test(s))return 'Firestore odmietol túto operáciu. Pre v3.0 treba publikovať nové firestore.rules.';if(/api-key-not-valid|invalid-api-key/.test(s))return 'Firebase API kľúč je neplatný. Skontroluj firebase-config.js.';if(/operation-not-allowed/.test(s))return 'Vo Firebase Authentication musí byť zapnuté anonymné prihlásenie.';if(/unavailable/.test(s))return 'Firebase je nedostupný. Skontroluj pripojenie.';return s};
+const errText=e=>{let s=String(e?.code||e?.message||e||'Neznáma chyba');if(/permission-denied|insufficient permissions/i.test(s))return 'Firestore odmietol túto operáciu. Pre v3.0 treba publikovať nové firestore.rules.';if(/api-key-not-valid|invalid-api-key/.test(s))return 'Firebase odmieta API kľúč. Vo Google Cloud skontroluj pri tomto kľúči Website restrictions: musia obsahovať obe adresy https://prismatic-ganache-e69adc.netlify.app aj https://prismatic-ganache-e69adc.netlify.app/* . Over aj Identity Toolkit API.';if(/operation-not-allowed/.test(s))return 'Vo Firebase Authentication musí byť zapnuté anonymné prihlásenie.';if(/unavailable/.test(s))return 'Firebase je nedostupný. Skontroluj pripojenie.';return s};
 const warn=e=>{console.error('[CZert]',e);say('banner','Chyba: '+errText(e));};
+// A rejected optional media listener must NEVER make a successful pairing look disconnected.
+function pairingError(e){
+  console.error('[CZert / pairing]',e);
+  say('banner','⚠️ Firebase Auth funguje, ale Firestore párovanie odmietlo operáciu: '+errText(e));
+  if(role==='user'){say('pairCode','Firestore odmietol prístup');say('userStatus',errText(e));}
+  else if(role==='admin')say('adminStatus',errText(e));
+}
+function mediaError(e){
+  console.warn('[CZert / streams]',e);
+  say('mediaBackendStatus', /permission-denied|insufficient permissions/i.test(String(e?.code||e?.message||e))
+    ? '⚠️ Párovanie funguje. Živé prenosy zatiaľ blokujú pravidlá Firestore: v konzole Firebase publikuj web/firestore.rules z v3.0.2.'
+    : '⚠️ Živý prenos zatiaľ nie je dostupný: '+errText(e));
+}
+
 function randomHex(n=12){const b=crypto.getRandomValues(new Uint8Array(n));return [...b].map(v=>v.toString(16).padStart(2,'0')).join('')}
 const codeFor=(id,secret)=>id+'.'+secret;
 function parseCode(raw){const x=raw.trim().split('.');if(x.length!==2||!/^[-\w]{20,}$/.test(x[0])||!/^[a-f0-9]{24}$/.test(x[1]))throw Error('Nesprávny formát kódu. Skopíruj celý kód vrátane bodky.');return {id:x[0],secret:x[1]}}
 function cleanUnsubs(list){for(const fn of list.splice(0))try{fn()}catch{}}
 function roleUI(){show('setup',!role);show('user',role==='user');show('admin',role==='admin');show('userSettings',role==='user');say('subtitle',role==='user'?'Používateľ — diagnostika a viditeľné zdieľanie':role==='admin'?'Administrátor — schválené pripojenia':'Zabezpečené párovanie zariadení');say('profileInfo','Režim: '+(role||'nezvolený')+' • Meno: '+(store.getItem('cz_name')||'—'));for(const k of ['camera','mic','screen'])$('allow'+k[0].toUpperCase()+k.slice(1)).checked=settingsPerm(k)}
-function choose(r){const name=$('name').value.trim();if(!name){alert('Zadaj názov zariadenia.');return;}role=r;store.setItem('cz_role',r);store.setItem('cz_name',name);roleUI();if(uid){if(r==='user')startUser().catch(warn);else startAdmin().catch(warn)}}
+function choose(r){const name=$('name').value.trim();if(!name){alert('Zadaj názov zariadenia.');return;}role=r;store.setItem('cz_role',r);store.setItem('cz_name',name);roleUI();if(uid){if(r==='user')startUser().catch(pairingError);else startAdmin().catch(pairingError)}}
 function whenReady(f){if(!uid)throw Error('Firebase ešte nie je prihlásený.');return f()}
-async function boot(){try{const a=initializeApp(firebaseConfig);auth=getAuth(a);db=getFirestore(a);const credential=await signInAnonymously(auth);uid=credential.user.uid;say('banner','● FIREBASE PRIPOJENÝ • '+uid.slice(0,9));roleUI();if(role==='user')await startUser();else if(role==='admin')await startAdmin()}catch(e){warn(e)}}
+async function boot(){
+  try{
+    const a=initializeApp(firebaseConfig);auth=getAuth(a);db=getFirestore(a);
+    const credential=await signInAnonymously(auth);
+    uid=credential?.user?.uid||'';
+    if(!uid)throw Error('Firebase nepridelil ID zariadenia.');
+    say('banner','● FIREBASE AUTH PRIPOJENÝ • '+uid.slice(0,9));
+  }catch(e){
+    console.error('[CZert / authentication]',e);
+    say('banner','❌ Firebase Authentication: '+errText(e));
+    if(role==='user'){say('pairCode','Prihlásenie sa nepodarilo');say('userStatus',errText(e));}
+    if(role==='admin')say('adminStatus',errText(e));
+    return;
+  }
+  roleUI();
+  try{
+    if(role==='user')await startUser();
+    else if(role==='admin')await startAdmin();
+  }catch(e){pairingError(e)}
+}
 function renderDevice(d){deviceData=d;const paired=!!d?.pairedWith;if(paired){say('pairCode','Kód už bol použitý');say('settingsCode','Kód už bol použitý');say('pairedLabel','Pripojený administrátor: '+(d.pairedName||d.pairedWith.slice(0,8)));show('userPaired');show('newCode',false);say('userStatus','● Párovanie schválené');say('pairBadge','SPÁROVANÉ')}else{const k=d?.secret?codeFor(uid,d.secret):'Kód chýba';say('pairCode',k);say('settingsCode',k);show('userPaired',false);show('newCode',true);say('pairBadge','ČAKÁM NA KÓD');if(d?.secret)pairSecret=d.secret;}}
 async function startUser(){whenReady(()=>{});say('userStatus','Načítavam zariadenie…');cleanUnsubs(unsubs);const ref=doc(db,'devices',uid);const s=await getDoc(ref);if(!s.exists()){pairSecret=randomHex();await setDoc(ref,{owner:uid,secret:pairSecret,pairedWith:null,pairedName:null,createdAt:serverTimestamp()})}else{pairSecret=s.data().secret||'';renderDevice(s.data())}
 unsubs.push(onSnapshot(ref,s=>{if(!s.exists())return;renderDevice(s.data())},warn));
 unsubs.push(onSnapshot(query(collection(db,'requests'),where('target','==',uid)),snap=>{const req=snap.docs.find(x=>x.data().status==='pending'&&x.data().secret===pairSecret&&!deviceData?.pairedWith);pendingPair=req||null;show('incoming',!!req);if(req)say('incomingText','Zariadenie '+(req.data().fromName||req.data().from.slice(0,8))+' chce párovanie. Povoľ iba známe zariadenie.')},warn));
-unsubs.push(onSnapshot(query(collection(db,'streams'),where('owner','==',uid)),snap=>{const req=snap.docs.find(x=>x.data().status==='requested'&&x.data().viewer===deviceData?.pairedWith);if(!req||activeSession){show('shareRequest',false);return;}const kind=req.data().kind;if(!settingsPerm(kind)){updateDoc(req.ref,{status:'declined'}).catch(warn);return;}pendingSession=req;show('shareRequest');say('shareRequestText','Administrátor žiada: '+({camera:'📷 kameru',mic:'🎙 mikrofón',screen:'📱 celú obrazovku'}[kind]||kind)+'. Reláciu spustíš len vlastným potvrdením.')},warn));
+try{
+  unsubs.push(onSnapshot(query(collection(db,'streams'),where('owner','==',uid)),snap=>{
+    say('mediaBackendStatus','📡 Živé relácie: pripojené k Firestore. Každý prenos potrebuje tvoje potvrdenie.');
+    const req=snap.docs.find(x=>x.data().status==='requested'&&x.data().viewer===deviceData?.pairedWith);
+    if(!req||activeSession){show('shareRequest',false);return;}
+    const kind=req.data().kind;
+    if(!settingsPerm(kind)){updateDoc(req.ref,{status:'declined'}).catch(mediaError);return;}
+    pendingSession=req;show('shareRequest');
+    say('shareRequestText','Administrátor žiada: '+({camera:'📷 kameru',mic:'🎙 mikrofón',screen:'📱 celú obrazovku'}[kind]||kind)+'. Reláciu spustíš len vlastným potvrdením.');
+  },mediaError));
+}catch(e){mediaError(e)}
 await renderSpecs();say('userStatus',deviceData?.pairedWith?'Spárované.':'Čakám na žiadosť…')}
 async function newCode(){try{whenReady(()=>{});if(deviceData?.pairedWith)throw Error('Najprv resetuj existujúce párovanie.');const secret=randomHex();await updateDoc(doc(db,'devices',uid),{secret});pairSecret=secret;pendingPair=null;show('incoming',false);say('userStatus','Nový kód je pripravený.')}catch(e){warn(e)}}
 async function decidePair(approved){try{if(!pendingPair)return;const req=pendingPair,rs=await getDoc(req.ref),ds=await getDoc(doc(db,'devices',uid));if(!rs.exists()||rs.data().status!=='pending'||rs.data().secret!==ds.data()?.secret||ds.data()?.pairedWith)throw Error('Žiadosť nie je aktuálna.');if(approved){await updateDoc(req.ref,{status:'approved'});await updateDoc(doc(db,'devices',uid),{pairedWith:rs.data().from,pairedName:rs.data().fromName,secret:null});say('userStatus','Párovanie bolo schválené.')}else{await updateDoc(req.ref,{status:'rejected'});say('userStatus','Žiadosť bola odmietnutá.')}pendingPair=null;show('incoming',false)}catch(e){warn(e)}}
 async function resetPair(){if(!confirm('Odpojiť aktuálne spárované zariadenie, zastaviť zdieľanie a vytvoriť nový kód?'))return;try{await stopUserShare();const secret=randomHex();await updateDoc(doc(db,'devices',uid),{pairedWith:null,pairedName:null,secret});pairSecret=secret;pendingPair=null;show('incoming',false);say('userStatus','Párovanie bolo zrušené. Nový kód je pripravený.')}catch(e){warn(e)}}
-async function startAdmin(){say('adminStatus','Pripravené na párovanie.');if(!targetId)return;const r=doc(db,'requests',uid+'_'+targetId);const s=await getDoc(r);if(s.exists()&&s.data().status==='approved'){markAdminPaired(targetId);say('adminStatus','Predchádzajúce schválenie. Ak Používateľ resetoval párovanie, zadaj nový kód.')}}
+async function startAdmin(){
+  say('adminStatus','Pripravené na párovanie.');
+  if(targetId)say('adminStatus','Predošlý cieľ je uložený, ale jeho aktuálne spárovanie nemožno bez potvrdenia overiť. Zadaj nový kód.');
+}
 function markAdminPaired(id){targetId=id;store.setItem('cz_admin_target',id);say('adminLabel','Zariadenie: '+id.slice(0,12));show('adminPaired')}
 async function connect(){try{whenReady(()=>{});const {id,secret}=parseCode($('targetCode').value);if(id===uid)throw Error('Nemôžeš pripojiť zariadenie samo k sebe.');targetId=id;say('adminStatus','Odosielam žiadosť…');const ref=doc(db,'requests',uid+'_'+id);const data={from:uid,target:id,secret,fromName:store.getItem('cz_name')||'Administrátor',status:'pending',createdAt:serverTimestamp()};await setDoc(ref,data);pairWatch();pairWatch=onSnapshot(ref,s=>{if(!s.exists())return;const status=s.data().status;if(status==='approved'){say('adminStatus','✅ Spárované!');markAdminPaired(id)}else if(status==='rejected'){say('adminStatus','Žiadosť bola odmietnutá.')}else say('adminStatus','Čaká sa na potvrdenie na používateľskom telefóne…')},warn)}catch(e){warn(e);say('adminStatus',errText(e))}}
 function stopTracks(){if(activeStream){activeStream.getTracks().forEach(t=>t.stop());activeStream=null;}if(activePc){activePc.close();activePc=null;}}
@@ -63,4 +109,4 @@ $('clearProfile').onclick=()=>{if(!confirm('Zmeniť režim? Neprebieha automatic
 $('resetPair').onclick=resetPair;$('resetPairQuick').onclick=resetPair;$('refresh').onclick=renderSpecs;$('newCode').onclick=newCode;$('approve').onclick=()=>decidePair(true);$('reject').onclick=()=>decidePair(false);$('connect').onclick=connect;$('shareApprove').onclick=acceptShare;$('shareReject').onclick=rejectShare;$('stopShare').onclick=()=>stopUserShare();$('stopView').onclick=()=>stopViewer();$('resetAdmin').onclick=resetAdmin;
 document.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>startView(b.dataset.kind));
 window.addEventListener('pagehide',()=>{stopTracks();viewerPc?.close();native?.stopScreen()});
-roleUI();boot();setInterval(()=>{if(role==='user'&&document.visibilityState==='visible')renderSpecs().catch(console.error)},2500);
+window.CZERT_WEB_VERSION='3.0.2';roleUI();boot();setInterval(()=>{if(role==='user'&&document.visibilityState==='visible')renderSpecs().catch(console.error)},2500);
